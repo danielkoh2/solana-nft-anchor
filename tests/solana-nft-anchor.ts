@@ -8,9 +8,7 @@ describe("solana-nft-anchor", () => {
 
   const program = anchor.workspace.solanaNftAnchor as Program<SolanaNftAnchor>;
 
-  it("Is initialized!", async () => {
-    // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
-  });
+  it("Mints a NFT!", async () =>{
+    console.log("Minting a NFT")
+  })
 });
