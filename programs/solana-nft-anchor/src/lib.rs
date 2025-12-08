@@ -8,10 +8,10 @@ use {
             Metadata,
         },
         token::{mint_to, Mint, MintTo, Token, TokenAccount},
-    }
+    },
 };
 
-declare_id!("HZYm99HMPnFK43rNggnwRD3xeLaeTNKmApg6s3YSBijB");
+declare_id!("5F3ZhZvcog1YN5yzZ4W7CuFchuKdZqurwxMmsedA9mdp");
 
 #[program]
 pub mod solana_nft_anchor {
@@ -21,9 +21,9 @@ pub mod solana_nft_anchor {
         ctx: Context<CreateToken>,
         nft_name: String,
         nft_symbol: String,
-        nft_url: String,
+        nft_uri: String,
     ) -> Result<()> {
-        msg!("Minting non fungible token from: {:?}", ctx.program_id);
+        msg!("Minting Token");
         // Cross Program Invocation (CPI)
         // Invoking the mint_to instruction on the token program
         mint_to(
@@ -33,7 +33,7 @@ pub mod solana_nft_anchor {
                     mint: ctx.accounts.mint_account.to_account_info(),
                     to: ctx.accounts.associated_token_account.to_account_info(),
                     authority: ctx.accounts.payer.to_account_info(),
-                }
+                },
             ),
             1,
         )?;
@@ -57,15 +57,15 @@ pub mod solana_nft_anchor {
             DataV2 {
                 name: nft_name,
                 symbol: nft_symbol,
-                uri: nft_url,
+                uri: nft_uri,
                 seller_fee_basis_points: 0,
                 creators: None,
                 collection: None,
                 uses: None,
             },
-            false,
-            true,
-            None,
+            false, // Is mutable
+            true,  // Update authority is signer
+            None,  // Collection details
         )?;
 
         msg!("Creating master edition account");
@@ -74,7 +74,7 @@ pub mod solana_nft_anchor {
         create_master_edition_v3(
             CpiContext::new(
                 ctx.accounts.token_metadata_program.to_account_info(),
-                CreateMasterEditionV3{
+                CreateMasterEditionV3 {
                     edition: ctx.accounts.edition_account.to_account_info(),
                     mint: ctx.accounts.mint_account.to_account_info(),
                     update_authority: ctx.accounts.payer.to_account_info(),
@@ -86,7 +86,7 @@ pub mod solana_nft_anchor {
                     rent: ctx.accounts.rent.to_account_info(),
                 },
             ),
-            None,
+            None, // Max Supply
         )?;
 
         msg!("NFT minted successfully.");
@@ -100,21 +100,21 @@ pub struct CreateToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// CHECK: Validate address by deriving PDA
+    /// CHECK: Validate address by deriving pda
     #[account(
         mut,
         seeds = [b"metadata", token_metadata_program.key().as_ref(), mint_account.key().as_ref()],
         bump,
-        seeds::program=token_metadata_program.key(),
+        seeds::program = token_metadata_program.key(),
     )]
     pub metadata_account: UncheckedAccount<'info>,
 
-    /// CHECK: Validate address by deriving PDA
+    /// CHECK: Validate address by deriving pda
     #[account(
         mut,
         seeds = [b"metadata", token_metadata_program.key().as_ref(), mint_account.key().as_ref(), b"edition"],
         bump,
-        seeds::program=token_metadata_program.key(),
+        seeds::program = token_metadata_program.key(),
     )]
     pub edition_account: UncheckedAccount<'info>,
 
